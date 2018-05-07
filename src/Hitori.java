@@ -56,7 +56,7 @@ public class Hitori {
         int nVars = 0;
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
-                Square temp = new Square(random.nextInt(n)+1,i,j);
+                Square temp = new Square(random.nextInt(n)+1,i,j,new Square[2][2]);
                 temp.setPlacement(nVars + 1);
                 hitori.board[i][j] = temp;
                 variables[nVars++] = temp;
@@ -71,10 +71,16 @@ public class Hitori {
             for (int j = 0; j < n; j++) {
                 for (int k = j + 1; k < n; k++) {
                     if (board[i][j].getNumber() == board[i][k].getNumber()) {
-                        violations.add(new Violation((!getBoard()[i][j].isWhite() || !getBoard()[i][k].isWhite()),"Not " + getBoard()[i][j].getPlacement() + " or not " + getBoard()[i][k].getPlacement()));
+                        ArrayList<Square> list = new ArrayList<>();
+                        list.add(board[i][j]);
+                        list.add(board[i][k]);
+                        violations.add(new Violation((!getBoard()[i][j].isWhite() || !getBoard()[i][k].isWhite()),"Not " + getBoard()[i][j].getPlacement() + " or not " + getBoard()[i][k].getPlacement(),list));
                     }
                     if (board[j][i].getNumber() == board[k][i].getNumber()) {
-                        violations.add(new Violation((!getBoard()[j][i].isWhite() || !getBoard()[k][i].isWhite()),"Not " + getBoard()[j][i].getPlacement() + " or not " + getBoard()[k][i].getPlacement()));
+                        ArrayList<Square> list = new ArrayList<>();
+                        list.add(board[j][i]);
+                        list.add(board[k][i]);
+                        violations.add(new Violation((!getBoard()[j][i].isWhite() || !getBoard()[k][i].isWhite()),"Not " + getBoard()[j][i].getPlacement() + " or not " + getBoard()[k][i].getPlacement(),list));
                     }
                 }
             }
@@ -101,7 +107,6 @@ public class Hitori {
     public Boolean solve() {
         int n = 1;
         while (!solved()) {
-            //System.out.println("Try number " + n++);
             if (reassign(getVariables(),getVariables().length-1) == 0) {
                 System.out.println("No solution here!");
                 return false;
@@ -119,7 +124,7 @@ public class Hitori {
         checkViolations();
         //Check that no row or column contains more than one of each number from 1 to n.
         for (Violation violation : getViolations()) {
-            if (!violation.getIsSatisfied()) {
+            if (!violation.getExpression()) {
                 return false;
             }
         }
