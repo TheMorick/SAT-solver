@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Scanner;
 
 public class Main {
@@ -9,6 +10,7 @@ public class Main {
 
         //Test with typed-in Hitori board.
         //scannerSolve(4);
+
 
         int n = 5;
         HitoriToCNF hitori = HitoriToCNF.setUp(n);
@@ -23,6 +25,32 @@ public class Main {
             }
         }
         SATSolver satSolver = new SATSolver(stringBuilder.toString());
+
+        ArrayList<String> strings = satSolver.solve();
+        for (String string : strings) {
+            System.out.println(string);
+        }
+
+
+        /*
+        SATVariable first = new SATVariable("1");
+        SATVariable second = new SATVariable("2");
+        SATVariable third = new SATVariable("3");
+        SATVariable fourth = new SATVariable("4");
+        SATClause clause1 = new SATClause("¬"+first.getName() + "∨" + second.getName() + "∨" + first.getName());
+        SATClause clause2 = new SATClause(third.getName() + "∨" + fourth.getName());
+        System.out.println(clause1);
+        for (SATVariable satVariable : clause1.getVariables()) {
+            System.out.print(satVariable.getName() + " ");
+        }
+        System.out.println();
+        clause1.unitPropagation("1");
+        System.out.println(clause1);
+        for (SATVariable satVariable : clause1.getVariables()) {
+            System.out.print(satVariable.getName() + " ");
+        }
+        System.out.println();
+        */
     }
 
     public static void randomSolve(int n) {
