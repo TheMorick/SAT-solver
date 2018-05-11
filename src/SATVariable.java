@@ -31,6 +31,15 @@ public class SATVariable {
     }
 
     public Boolean isNegated() {
-        return trueness;
+        return !trueness;
+    }
+
+    public Boolean variableSatisfied() {
+        if (trueness) {
+            return assignment == 1;
+        }
+        else {
+            return assignment == -1;
+        }
     }
 }

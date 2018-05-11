@@ -1,12 +1,13 @@
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.Scanner;
 
 public class HitoriToCNF {
 
     static private Square[][] board;
     static private Square[] variables;
     static private ArrayList<Violation> violations;
-    private int n;
+    static private int n;
     private ArrayList<Chain> chains;
     private ArrayList<Square> violators;
 
@@ -18,6 +19,43 @@ public class HitoriToCNF {
         this.board = new Square[n][n];
         this.n = n;
         this.chains = new ArrayList<>();
+    }
+
+    public static void HitoriToCNFString(int n, Scanner scanner) {
+        HitoriToCNF hitori = new HitoriToCNF(n);
+        variables = new Square[n*n];
+        int nVars = 0;
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                System.out.println("Square at position " + (i+1) + "," + (j+1));
+                Square temp = new Square(scanner.nextInt(),i,j,hitori.board);
+                temp.setPlacement(nVars + 1);
+                hitori.board[i][j] = temp;
+                variables[nVars++] = temp;
+            }
+        }
+        System.out.println(hitori);
+        hitori.checkViolations();
+        StringBuilder stringBuilder = new StringBuilder();
+        int check = 0;
+        for (Violation violation : getViolations()) {
+            stringBuilder.append(violation.getClause());
+            check++;
+            if (check < getViolations().size()) {
+                stringBuilder.append("∧");
+            }
+        }
+        System.out.println(stringBuilder.toString());
+        SATSolver solver = new SATSolver(stringBuilder.toString());
+        ArrayList<String> strings = solver.solve();
+        System.out.println();
+        if (strings == null) {
+            System.out.println("No solution!");
+        } else {
+            for (String string : strings) {
+                System.out.println(string);
+            }
+        }
     }
 
     public static HitoriToCNF HitoriRandom(int n) {
@@ -40,6 +78,34 @@ public class HitoriToCNF {
         HitoriToCNF hitori = HitoriRandom(n);
         hitori.checkViolations();
         return hitori;
+    }
+
+    public static void solve(HitoriToCNF hitori) {
+        hitori.checkViolations();
+        if (hitori.getViolations().size() == 0) {
+            System.out.println("Easy solution!");
+        }
+        else {
+            StringBuilder stringBuilder = new StringBuilder();
+            int check = 0;
+            for (Violation violation : hitori.getViolations()) {
+                stringBuilder.append(violation.getClause());
+                check++;
+                if (check < hitori.getViolations().size()) {
+                    stringBuilder.append(" ∧ ");
+                }
+            }
+            System.out.println(stringBuilder.toString());
+            SATSolver solver = new SATSolver(stringBuilder.toString());
+            ArrayList<String> strings = solver.solve();
+            if (strings == null) {
+                System.out.println("No solution here!");
+            } else {
+                for (String string : strings) {
+                    System.out.println(string);
+                }
+            }
+        }
     }
 
     public ArrayList<Violation> checkViolations() {
@@ -104,7 +170,7 @@ public class HitoriToCNF {
         return chain.tape() == n*n;
     }
 
-    public void chainRecursive(Square square) {
+    public static void chainRecursive(Square square) {
         int i = square.getiCoord();
         int j = square.getjCoord();
         Square neighbor;

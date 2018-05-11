@@ -23,15 +23,15 @@ public class SATSolver {
     }
 
     public ArrayList<String> solve() {
-        ArrayList<Integer> changes = new ArrayList<>();
-        ArrayList<Boolean> check = new ArrayList<>();
+        ArrayList<Integer> assignments = new ArrayList<>();
+        ArrayList<Boolean> changes = new ArrayList<>();
         for (int i = 0; i < variables.size(); i++) {
-            changes.add(0);
-            check.add(false);
+            assignments.add(0);
+            changes.add(false);
         }
-        changes.set(1,1);
-        recursiveSatisfy(clauses,variables,changes,check);
-        if (solutions != null) {
+        assignments.set(1,1);
+        recursiveSatisfy(clauses,variables,assignments,changes);
+        if (solutions.size() != 0) {
             return stringer(solutions);
         }
         else return null;
@@ -56,46 +56,52 @@ public class SATSolver {
         return strings;
     }
 
-    public void recursiveSatisfy(ArrayList<SATClause> clauses, ArrayList<SATVariable> variables, ArrayList<Integer> changes, ArrayList<Boolean> check) {
-        setAssignments(variables,changes);
+    public void recursiveSatisfy(ArrayList<SATClause> clauses, ArrayList<SATVariable> variables, ArrayList<Integer> assignments, ArrayList<Boolean> changes) {
+        setAssignments(variables,assignments);
         ArrayList<SATClause> newClauses = clauses;
-        ArrayList<Boolean> newCheck = check;
-        ArrayList<Integer> newChanges = changes;
-        for (int i = 0; i < changes.size(); i++) {
-            if (changes.get(i) != 0) {
-                if (check.get(i) == false) {
-                    ArrayList<SATClause> newerClauses = new ArrayList<>();
+        ArrayList<SATClause> newerClauses = new ArrayList<>();
+        ArrayList<Integer> newAssignments = assignments;
+        ArrayList<Boolean> newChanges = changes;
+        System.out.println(variables.size() + " variables at the start!");
+        System.out.println(newClauses.size() + " clauses at the start!");
+        for (int i = 0; i < assignments.size(); i++) {
+            if (assignments.get(i) != 0) {
+                if (!changes.get(i)) {
                     for (SATClause clause : newClauses) {
                         SATClause temp = clause.unitPropagation(variables.get(i));
                         if (temp != null) {
                             newerClauses.add(temp);
                         }
                     }
-                    newCheck.set(i,true);
+                    newChanges.set(i,true);
                     newClauses = newerClauses;
                 }
             }
         }
+        //Update the list of variables to reflect the new clauses.
+        //variables = findNewVariables(newClauses);
+        System.out.println(variables.size() + " variables at the end!");
+        System.out.println(newClauses.size() + " clauses at the end!");
 
-        Boolean satisfiable = true;
+        Boolean isSolved = true;
         for (int i = 0; i < newClauses.size(); i++) {
             if (newClauses.get(i).getVariables().size() == 1) {
                 for (int j = 0; j < variables.size(); j++) {
-                    if (newClauses.get(i).getVariables().get(0) == variables.get(j)) {
+                    if (newClauses.get(i).getVariables().get(0).getName() == variables.get(j).getName()) {
                         if (newClauses.get(i).getVariables().get(0).isNegated()) {
-                            if (newChanges.get(j) == 1) {
-                                satisfiable = false;
+                            if (newAssignments.get(j) == 1) {
+                                isSolved = false;
                             }
                             else {
-                                newChanges.set(j, -1);
+                                newAssignments.set(j, -1);
                             }
                         }
                         else {
-                            if (newChanges.get(j) == -1) {
-                                satisfiable = false;
+                            if (newAssignments.get(j) == -1) {
+                                isSolved = false;
                             }
                             else {
-                                newChanges.set(j, 1);
+                                newAssignments.set(j, 1);
                             }
                         }
                     }
@@ -103,27 +109,84 @@ public class SATSolver {
             }
         }
 
-        if (satisfiable) {
-            if (!compareChecks(check, newCheck)) {
-                recursiveSatisfy(newClauses, variables, newChanges, newCheck);
+        //An issue might arise from the list of variables being empty.
+        //This keeps an eye out for that.
+        if (variables.isEmpty()) {
+            try {
+                throw new Exception("Out of variables!");
+            } catch (Exception e) {
+                System.out.println("Exception-exception!");
             }
-            int checkeroo = findZero(newChanges);
+        }
+        System.out.println(howManyZeroes() + " variables are unassigned!");
+        if (isSolved) {
+            if (!compareChecks(changes, newChanges)) {
+                recursiveSatisfy(newClauses, variables, newAssignments, newChanges);
+            }
+            int checkeroo = findZero(newAssignments);
+            System.out.println("Found a zero at spot " + checkeroo);
+            System.out.println();
             if (checkeroo != -1) {
-                newChanges.set(checkeroo, 1);
-                recursiveSatisfy(newClauses, variables, newChanges, newCheck);
-                newChanges.set(checkeroo, -1);
-                recursiveSatisfy(newClauses, variables, newChanges, newCheck);
+                newAssignments.set(checkeroo, 1);
+                recursiveSatisfy(newClauses, variables, newAssignments, newChanges);
+                newAssignments.set(checkeroo, -1);
+                recursiveSatisfy(newClauses, variables, newAssignments, newChanges);
             } else {
-                setAssignments(variables, newChanges);
+                setAssignments(variables, newAssignments);
+                //Doesn't evaluate properly. Possibly changes the assignments of the variables
+                // in other recursive calls.
+                // Maybe change solutions to contain Integers representing
+                // the assignments instead, to prevent further changes to the things.
                 solutions.add(variables);
             }
         }
+        System.out.println();
+    }
+
+    //This method is for testing only.
+    public int howManyZeroes() {
+        int number = 0;
+        for (SATVariable variable : variables) {
+            if (variable.getAssignment() == 0) {
+                number++;
+            }
+        }
+        return number;
+    }
+
+    public ArrayList<SATVariable> findNewVariables(ArrayList<SATClause> newClauses) {
+        ArrayList<SATVariable> variables = new ArrayList<>();
+        System.out.println("We have " + newClauses.size() + " clauses to work with!");
+        variables.add(newClauses.get(0).getVariables().get(0));
+        for (SATClause newClause : newClauses) {
+            for (SATVariable satVariable : newClause.getVariables()) {
+                Boolean varContains = false;
+                for (SATVariable variable : variables) {
+                    if (satVariable == variable) {
+                        varContains = true;
+                    }
+                }
+                if (!varContains) {
+                    variables.add(satVariable);
+                }
+            }
+        }
+        return variables;
+    }
+
+    public Boolean isSatisfied() {
+        for (SATClause clause : clauses) {
+            if (!clause.clauseSatisfied()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     //This method returns true if the two ArrayLists are identical.
-    public Boolean compareChecks(ArrayList<Boolean> check, ArrayList<Boolean> newCheck) {
-        for (int i = 0; i < check.size(); i++) {
-            if (check.get(i) != newCheck.get(i)) {
+    public Boolean compareChecks(ArrayList<Boolean> changes, ArrayList<Boolean> newChanges) {
+        for (int i = 0; i < changes.size(); i++) {
+            if (changes.get(i) != newChanges.get(i)) {
                 return false;
             }
         }
@@ -133,17 +196,19 @@ public class SATSolver {
     //This method goes through the given ArrayList, looking for a zero.
     //If it finds a zero, it returns the index of that zero.
     //If not, it returns -1.
-    public int findZero(ArrayList<Integer> changes) {
-        for (int i = 0; i < changes.size(); i++) {
-            if (changes.get(i) == 0);
-            return i;
+    public int findZero(ArrayList<Integer> assignments) {
+        for (int i = 0; i < assignments.size(); i++) {
+            //embarrassing...
+            if (assignments.get(i) == 0) {
+                return i;
+            }
         }
         return -1;
     }
 
-    public void setAssignments(ArrayList<SATVariable> variables, ArrayList<Integer> changes) {
+    public void setAssignments(ArrayList<SATVariable> variables, ArrayList<Integer> assignments) {
         for (int i = 0; i < variables.size(); i++) {
-            variables.get(i).setAssignment(changes.get(i));
+            variables.get(i).setAssignment(assignments.get(i));
         }
     }
 }

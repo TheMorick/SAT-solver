@@ -37,29 +37,21 @@ public class SATClause {
 
     public Boolean clauseSatisfied() {
         for (SATVariable variable : variables) {
-            if (!variable.isNegated()) {
-                if (variable.getAssignment() == 1) {
-                    return true;
-                }
-            }
-            else {
-                if (variable.getAssignment() == -1) {
-                    return true;
-                }
+            if (variable.variableSatisfied()) {
+                return true;
             }
         }
         return false;
     }
 
-    //This method's return decides what is to be done next.
-    //If this method returns true, the entire clause must be
-    // removed from the full expression.
-    //If it returns false, the appropriate measure has already
-    // been taken.
+    //This method returns the resulting clause object, after the given
+    // variable has been processed.
+    //If the given variable is in this clause, some checks for negation
+    // ensure that the correct course of action is taken.
     public SATClause unitPropagation(SATVariable variable) {
         if (variables.size() > 1) {
             for (SATVariable satVariable : variables) {
-                if (satVariable.getName() == variable.getName()) {
+                if (satVariable.getName().equals(variable.getName())) {
                     if (!variable.isNegated()) {
                         if (satVariable.isNegated()) {
                             variables.remove(satVariable);

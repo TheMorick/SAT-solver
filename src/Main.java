@@ -5,14 +5,18 @@ import java.util.Scanner;
 public class Main {
 
     public static void main(String[] args) {
+        int n = 4;
+
         //Test with random Hitori board of size n
         //randomSolve(5);
 
         //Test with typed-in Hitori board.
         //scannerSolve(4);
 
+        //Test with typed-in Hitori board.
+        sepScannerSolve(n);
 
-        int n = 5;
+        /*
         HitoriToCNF hitori = HitoriToCNF.setUp(n);
         System.out.println(hitori);
         StringBuilder stringBuilder = new StringBuilder();
@@ -27,10 +31,16 @@ public class Main {
         SATSolver satSolver = new SATSolver(stringBuilder.toString());
 
         ArrayList<String> strings = satSolver.solve();
-        for (String string : strings) {
-            System.out.println(string);
+        System.out.println();
+        if (strings == null) {
+            System.out.println("No solution!");
         }
-
+        else {
+            for (String string : strings) {
+                System.out.println(string);
+            }
+        }
+        */
 
         /*
         SATVariable first = new SATVariable("1");
@@ -53,6 +63,12 @@ public class Main {
         */
     }
 
+    public static void sepScannerSolve(int n) {
+        Scanner scanner = new Scanner(System.in);
+        HitoriToCNF.HitoriToCNFString(n,scanner);
+
+    }
+
     public static void randomSolve(int n) {
         Hitori hitori = Hitori.HitoriRandom(n);
         System.out.println(hitori);
@@ -71,7 +87,7 @@ public class Main {
         int count = 0;
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
-                //squares[count++] = new Square(scanner.nextInt(),i,j),;
+                //squares[count++] = new Square(scanner.nextInt(),i,j);
             }
         }
         Hitori hitori = new Hitori(n,squares);
