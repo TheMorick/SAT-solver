@@ -6,7 +6,7 @@ public class SATSolver {
     private Scanner scanner;
     private ArrayList<SATClause> clauses = new ArrayList<>();
     private ArrayList<SATVariable> variables = new ArrayList<>();
-    private ArrayList<ArrayList<SATVariable>> solutions = new ArrayList<>();
+    private ArrayList<ArrayList<String>> solutions = new ArrayList<>();
 
     public SATSolver(String CNF) {
         scanner = new Scanner(CNF).useDelimiter("∧");
@@ -20,9 +20,10 @@ public class SATSolver {
                 }
             }
         }
+        //Could add solve() here, to make the whole thing automatic, maybe.
     }
 
-    public ArrayList<String> solve() {
+    public ArrayList<ArrayList<String>> solve() {
         ArrayList<Integer> assignments = new ArrayList<>();
         ArrayList<Boolean> changes = new ArrayList<>();
         for (int i = 0; i < variables.size(); i++) {
@@ -32,11 +33,12 @@ public class SATSolver {
         assignments.set(1,1);
         recursiveSatisfy(clauses,variables,assignments,changes);
         if (solutions.size() != 0) {
-            return stringer(solutions);
+            return solutions;
         }
         else return null;
     }
 
+    //Now unnecessary.
     public ArrayList<String> stringer(ArrayList<ArrayList<SATVariable>> solutions) {
         ArrayList<String> strings = new ArrayList<>();
         for (ArrayList<SATVariable> solution : solutions) {
@@ -133,11 +135,12 @@ public class SATSolver {
                 recursiveSatisfy(newClauses, variables, newAssignments, newChanges);
             } else {
                 setAssignments(variables, newAssignments);
-                //Doesn't evaluate properly. Possibly changes the assignments of the variables
-                // in other recursive calls.
-                // Maybe change solutions to contain Integers representing
-                // the assignments instead, to prevent further changes to the things.
-                solutions.add(variables);
+                //If we add isSatisfied(), it says there is no solution.
+                //If we leave it out, it comes up with a wrong solution.
+                if (isSatisfied()) {
+                    //solutions.add(variables);
+                    solutions.add(getAssignments(variables, newAssignments));
+                }
             }
         }
         System.out.println();
@@ -210,5 +213,18 @@ public class SATSolver {
         for (int i = 0; i < variables.size(); i++) {
             variables.get(i).setAssignment(assignments.get(i));
         }
+    }
+
+    public ArrayList<String> getAssignments(ArrayList<SATVariable> variables, ArrayList<Integer> assignments) {
+        ArrayList<String> strings = new ArrayList<>();
+        for (int i = 0; i < variables.size(); i++) {
+            if (assignments.get(i) == 1) {
+                strings.add(variables.get(i).getName() + ": true");
+            }
+            else {
+                strings.add(variables.get(i).getName() + ": false");
+            }
+        }
+        return strings;
     }
 }

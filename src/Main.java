@@ -65,8 +65,12 @@ public class Main {
 
     public static void sepScannerSolve(int n) {
         Scanner scanner = new Scanner(System.in);
-        HitoriToCNF.HitoriToCNFString(n,scanner);
-
+        ArrayList<String> solution = HitoriToCNF.HitoriToCNFString(n,scanner);
+        if (solution != null) {
+            for (String s : solution) {
+                System.out.println(s);
+            }
+        }
     }
 
     public static void randomSolve(int n) {

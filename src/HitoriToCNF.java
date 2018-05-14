@@ -21,7 +21,7 @@ public class HitoriToCNF {
         this.chains = new ArrayList<>();
     }
 
-    public static void HitoriToCNFString(int n, Scanner scanner) {
+    public static ArrayList<String> HitoriToCNFString(int n, Scanner scanner) {
         HitoriToCNF hitori = new HitoriToCNF(n);
         variables = new Square[n*n];
         int nVars = 0;
@@ -47,13 +47,34 @@ public class HitoriToCNF {
         }
         System.out.println(stringBuilder.toString());
         SATSolver solver = new SATSolver(stringBuilder.toString());
-        ArrayList<String> strings = solver.solve();
+        ArrayList<ArrayList<String>> stringLists = solver.solve();
         System.out.println();
-        if (strings == null) {
+        if (stringLists == null) {
             System.out.println("No solution!");
         } else {
-            for (String string : strings) {
-                System.out.println(string);
+            for (ArrayList<String> stringList : stringLists) {
+                assign(stringList);
+                if (chainLength()) {
+                    //One of possibly many solutions.
+                    return stringList;
+                }
+            }
+        }
+        //Should be null-check at the other end.
+        return null;
+    }
+
+    public static void assign(ArrayList<String> stringList) {
+        varLoop: for (Square variable : variables) {
+            for (String string : stringList) {
+                if (string.startsWith(Integer.toString(variable.getPlacement()))) {
+                    if (string.endsWith("true")) {
+                        variable.setTrue();
+                    } else {
+                        variable.setFalse();
+                    }
+                    continue varLoop;
+                }
             }
         }
     }
@@ -80,6 +101,8 @@ public class HitoriToCNF {
         return hitori;
     }
 
+    //No longer used (?)
+    /*
     public static void solve(HitoriToCNF hitori) {
         hitori.checkViolations();
         if (hitori.getViolations().size() == 0) {
@@ -107,6 +130,7 @@ public class HitoriToCNF {
             }
         }
     }
+    */
 
     public ArrayList<Violation> checkViolations() {
         this.violations = new ArrayList<>();
@@ -156,7 +180,7 @@ public class HitoriToCNF {
 
     }
 
-    public Boolean chainLength() {
+    public static Boolean chainLength() {
         Chain chain = new Chain();
         if (board[0][0].isWhite()) {
             chain.addSquare(board[0][0]);
